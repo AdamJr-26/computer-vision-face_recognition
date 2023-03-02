@@ -16,14 +16,14 @@ import threading
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
     
-    def __init__(self):
+    def __init__(self, cap):
+        self.cap = cap
         super().__init__()
     
     def run(self):
-        cap = cv2.VideoCapture(0)
-        
+
         while True:
-            ret, frame = cap.read()
+            ret, frame = self.cap.read()
             if ret:
                 self.change_pixmap_signal.emit(frame)
                 

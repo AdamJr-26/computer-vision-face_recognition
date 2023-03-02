@@ -128,4 +128,5 @@ class Components:
         button.setIconSize(QSize(50, 50))
         button.setGeometry(500,410 , 50 ,50)
         button.clicked.connect(self.takeShot)
-        return button 
+        return button
+    

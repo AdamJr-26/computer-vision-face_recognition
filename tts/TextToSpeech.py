@@ -23,6 +23,8 @@ class TextToSpeech:
         self.file_name = ""
         self.text_file_path = ""
         
+        self.busy = False
+        
     def getUserInput(self, user_input_speech):
         if(user_input_speech == "who are you"):
             self.text_file_path = "./data/tts/text_files/who_am_i.txt"
@@ -55,9 +57,12 @@ class TextToSpeech:
         # random string file name
         alphabet = string.ascii_letters + string.digits
         random_string = ''.join(secrets.choice(alphabet) for i in range(10))
-        self.file_path_mp3 = random_string    
+        file_path = "./data/tts/voices"
+        file_name = random_string + ".mp3"
+        self.file_path_mp3 = os.path.join(file_path, file_name)  
+        print("self.file_path_mp3 ",self.file_path_mp3 )
         tts = gTTS(self.text)
-        tts.save(random_string)
+        tts.save(self.file_path_mp3)
         
     def playAudio(self):
         # Initialize pygame and play the audio file
@@ -67,6 +72,7 @@ class TextToSpeech:
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
+                self.busy = True
 
     def stopAudio(self):
         # Fade out and stop the audio playback

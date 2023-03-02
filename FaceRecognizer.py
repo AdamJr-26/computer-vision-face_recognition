@@ -49,36 +49,39 @@ class FaceRecognizer:
                 if len(face_recognition.face_encodings(loaded_image, face)):
                     self.known_face_encodings.append(face_recognition.face_encodings(loaded_image, face)[0])
                         
-    # not used.
-    def returnFrame(self, ret, frame):
-        self.current_frame = frame
-        
-        return self.current_frame
     
     # draw reactangle on detected faces.
-    def detectFaces(self):
-        if self.current_frame is None:
-            return
+    def detectFaces(self, frame):
+        print("self.detected_unknown_faces_locations", self.detected_unknown_faces_locations)
+        print(" self.detected_names",  self.detected_names)
+        if self.detected_unknown_faces_locations and self.detected_names:
+            for (top, right, bottom, left), name in zip(self.detected_unknown_faces_locations, self.detected_names):
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
+                cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
         
-        gray_frame = cv2.cvtColor(self.current_frame, cv2.COLOR_BGR2GRAY)
-        # Detect faces in the frame
-        faces = face_recognition.face_locations(gray_frame)
-        
-        self.detected_unknown_faces_locations = faces
-        self.unknown_face_encodings = face_recognition.face_encodings(np.array(self.current_frame), np.array(self.detected_unknown_faces_locations))
-
+        return frame
+        # print("I am running and recognizing the faces.")
 
     def recognizeFaces(self, modified_frame):
         # modified_frame = modified_frame.copy()
         
         # detect faces
-        size_frame = cv2.resize(modified_frame, (200, int(modified_frame.shape[0] * 200 / modified_frame.shape[1])))
-        gray_frame = cv2.cvtColor(size_frame, cv2.COLOR_BGR2GRAY)
+        # size_frame = cv2.resize(modified_frame, (200, int(modified_frame.shape[0] * 200 / modified_frame.shape[1])))
+        gray_frame = cv2.cvtColor(modified_frame, cv2.COLOR_BGR2GRAY)
         faces_locations = face_recognition.face_locations(gray_frame)
-        self.detected_unknown_faces_locations = faces_locations
-        face_encodings = face_recognition.face_encodings(np.array(size_frame), np.array(faces_locations))
-        self.unknown_face_encodings = face_encodings
+        face_encodings = face_recognition.face_encodings(np.array(modified_frame), np.array(faces_locations))
         
+        if len(face_encodings) and len(faces_locations):
+            self.detected_unknown_faces_locations = faces_locations
+            self.unknown_face_encodings = face_encodings
+            # update icons on widget
+            
+        else:
+            self.detected_unknown_faces_locations = []
+            self.unknown_face_encodings = []
+            # update icons on widget
+
+
         # recognize faces
         names = []
         for encoding in self.unknown_face_encodings:
@@ -88,25 +91,24 @@ class FaceRecognizer:
                 idx = matches.index(True)
                 name = self.known_face_names[idx]
                 print("should know my name: ", name)
-                tts = TextToSpeech()
-                tts.getUserInput('greetings')
-                tts.getTextResponse()
-                tts.modifyText('person_name_to_replace', name)
-                tts.saveAudio()
-                tts.playAudio()
-                tts.stopAudio()
+                # TTS
+                # tts = TextToSpeech()
+                # tts.getUserInput('greetings')
+                # tts.getTextResponse()
+                # tts.modifyText('person_name_to_replace', name)
+                # tts.saveAudio()
+                # tts.playAudio()
+                # tts.stopAudio()
                 self.addToLogItems(name, modified_frame)
+                
             else:
                 print("Am pretty sure you dont know me: ", name)
                 self.addToLogItems(name, modified_frame)
+                
                 # print("self.log_items",self.log_items)
 
             names.append(name)
         self.detected_names = names
-        # Draw rectangles and names around the recognized faces
-        for (top, right, bottom, left), name in zip(faces_locations, names):
-            cv2.rectangle(modified_frame, (left, top), (right, bottom), (0, 0, 255), 2)
-            cv2.putText(modified_frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
         return [ modified_frame, names, faces_locations, face_encodings ]
     
@@ -134,13 +136,14 @@ class FaceRecognizer:
                 return
             
             # TTS
-            tts = TextToSpeech()
-            tts.getUserInput('uknown_detected')
-            tts.getTextResponse()
-            tts.saveAudio()
-            tts.playAudio()
-            tts.stopAudio()
+            # tts = TextToSpeech()
+            # tts.getUserInput('uknown_detected')
+            # tts.getTextResponse()
+            # tts.saveAudio()
+            # tts.playAudio()
+            # tts.stopAudio()
             # Remove the oldest item from the list
+            
             if len(data["recent_detected"]) >= 20 and os.path.exists(data['recent_detected'][0]["image"]):
                 image_path_to_remove = data['recent_detected'][0]["image"]
                 data['recent_detected'].pop(0)
@@ -156,8 +159,7 @@ class FaceRecognizer:
             # Save the updated data file
             with open(self.recent_json, "w") as f:
                 json.dump(data, f, indent=4)
-    def drawRectangleOnFaces(self):
-        pass
+
     def checkRecentImagesAvoidSameFace(self, recent, new_image):
         # encodings
         isMatch = False
@@ -195,10 +197,6 @@ class FaceRecognizer:
         # compare with new face.
     def getFacesLocation(self):
         pass
-
-
-    
-
 
     # load images
     # find all faces in frame

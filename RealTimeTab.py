@@ -17,11 +17,12 @@ import threading
 import os
 import json
 from datetime import datetime
-
+import time
 import random
 import string
 from LoadRecentJsonFile import LoadRecentJsonFile
 from QListWidgetComponent import QListWidgetComponent
+import time
 class RealTimeTab():
     
     def __init__(self):
@@ -35,11 +36,12 @@ class RealTimeTab():
         self.capture_label.setStyleSheet(stylesheet.video_capture_label)
         self.cameraButton(self.capture_label)
         layout.addWidget(self.capture_label, 3) # video capture
+        
         qlabel = QLabel("voice")
         qlabel.setStyleSheet("""QLabel {border: 2px solid #D4CECE;
                              border-radius: 10px; }
                                                        """)
-        layout.addWidget(qlabel, 1) # voice visualizer
+        layout.addWidget(self.detectionIcons(), 1) # voice visualizer
         widget = QWidget()
         widget.setLayout(layout)
         return widget
@@ -63,31 +65,30 @@ class RealTimeTab():
     
                
     # display frame, ito yung tatawagin ng connect if signal emitted.
-    def update_frame(self, frame):
-        image = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888).rgbSwapped()
-        self.capture_label.setPixmap(QPixmap.fromImage(image))
-
-            
-    
-    # process fame, ito mag eemit ng signal also start ng thread.
-    def processFrame(self):
+    def update_frame(self):
         ret, frame = self.cap.read()
-        if ret:
-            print("hello i am running...")
-            self.current_frame = cv2.resize(frame, (200, int(frame.shape[0] * 200 / frame.shape[1])))
-            cv2.resize(frame, (100, int(frame.shape[0] * 100 / frame.shape[1])))
-            
-            modified_frame, names, faces_locations, face_encodings = self.recognizeFaces(frame)
-        
-        # self.frame_processed.emit(modified_frame, names, faces_locations)
-        
-        # image = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888).rgbSwapped()
-        # self.capture_label.setPixmap(QPixmap.fromImage(image))
-        
-        
-        # detect faces and store to the main variables
-        # recognize faces and names and stoe to the variables.
-        
+        if ret :
+            mod_frame = self.detectFaces(frame)
+            image = QImage(mod_frame, mod_frame.shape[1], mod_frame.shape[0], QImage.Format_RGB888).rgbSwapped()
+            self.capture_label.setPixmap(QPixmap.fromImage(image))
+
+    # process fame, ito mag eemit ng signal also start ng thread.
+    def processFrameThread(self):
+        while True:
+            ret, frame = self.cap.read()
+            if ret:
+                self.current_frame = frame
+                self.recognizeFaces(frame)
+                # t = threading.Thread(target=self.recognizeFaces, args=(frame,))
+                # t.daemon = True
+                # t.start()
+                
+                if len(self.detected_unknown_faces_locations):
+                    face_icon_pixmap = QPixmap('./assets/icon/with_face_detecting.png')
+                    self.face_icon_label.setPixmap(face_icon_pixmap)
+                else:
+                    face_icon_pixmap = QPixmap('./assets/icon/no_face_detecting.png')
+                    self.face_icon_label.setPixmap(face_icon_pixmap)
     def registerPerson(self, name, person_image):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Question)
@@ -126,14 +127,61 @@ class RealTimeTab():
             
         elif response == QMessageBox.No:
             print("User clicked No.")              
-            
-    def takeShot(self):
+    
+    def detectionIcons(self):
+        detection_widget = QWidget()
+        detection_widget.setProperty('class', 'detection-widget-wrapper')
+        detection_widget.setStyleSheet(stylesheet.detection_widget_wrapper)
+        detection_layout = QHBoxLayout()
         
+        #  face detection
+        face_detection_widget = QWidget()
+        face_detection_layout = QVBoxLayout()
+        face_detection_layout.setAlignment(Qt.AlignCenter)
+        self.face_icon_label = QLabel()
+        face_icon_pixmap = QPixmap('./assets/icon/no_face_detecting.png')
+        self.face_icon_label.setPixmap(face_icon_pixmap)
+        self.face_icon_label.setProperty('class', 'icon-label')
+        face_text_label = QLabel('Face detection status')
+        
+        face_text_label.setProperty('class', 'detection-text-label')
+        face_detection_layout.addWidget(self.face_icon_label)
+        face_detection_layout.addWidget(face_text_label)
+        face_detection_widget.setLayout(face_detection_layout)
+        
+        #  body detection
+        body_detection_widget = QWidget()
+        body_detection_layout = QVBoxLayout()
+        body_detection_layout.setAlignment(Qt.AlignCenter)
+        self.body_icon_label = QLabel()
+        body_icon_pixmap = QPixmap('./assets/icon/no_body_detecting.png')
+        self.body_icon_label.setPixmap(body_icon_pixmap)
+        self.body_icon_label.setProperty('class', 'icon-label')
+        body_text_label = QLabel('Face detection status')
+        body_text_label.setProperty('class', 'detection-text-label')
+        
+        body_detection_layout.addWidget(self.body_icon_label)
+        body_detection_layout.addWidget(body_text_label)
+        body_detection_widget.setLayout(body_detection_layout)
+        
+        
+        # add face_detection_widget to detection_layout horizontally
+        detection_layout.addWidget(face_detection_widget)
+        detection_layout.addWidget(body_detection_widget)
+        
+        # Set the layout for the detection_widget
+        detection_widget.setLayout(detection_layout)
+        
+        return detection_widget
+
+        
+    def takeShot(self):
+        print("self.current_frame",self.current_frame)
         if self.current_frame is None or len(self.detected_unknown_faces_locations) <= 0:
             return 
         faces = self.detected_unknown_faces_locations
         if len(faces):
-            print("took a shot")
+            print("took a shoot")
             # get first detected in frame
             x, y, w, h = faces[0]
             # crop image
