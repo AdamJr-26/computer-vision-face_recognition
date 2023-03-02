@@ -19,8 +19,10 @@ from FaceRecognizer import FaceRecognizer
 import numpy as np
 from VideoThread import VideoThread
 from ProcessFrame import ProcessFrame
+import threading
 class Main(QMainWindow, Tabs, FaceRecognizer ):
-    
+    faces_ignal_detection = pyqtSignal(str)
+    body_ignal_detection = pyqtSignal(str)
     def __init__(self):
         super().__init__()
 
@@ -38,26 +40,23 @@ class Main(QMainWindow, Tabs, FaceRecognizer ):
         
         self.shot_face = None
         
+        self.current_detected_face = None
+        
+        
         # log items
         self.log_data = []
+        self.thread = QThread()
         
         # Create a timer to update the video frame
         self.timer = QTimer(self)
-        self.timer.start(2000)
-        self.timer.timeout.connect(self.processFrame)
+        self.timer.start(60)
+        self.timer.timeout.connect(self.update_frame)
         
-        # self.proccess_frame = ProcessFrame()
-        # self.proccess_frame.changed_frame.connect(self.processFrame)
-        # self.proccess_frame.start()
+        # self.processFrameThread()
+        self.thread = threading.Thread(target=self.processFrameThread)
+        self.thread.daemon = True 
+        self.thread.start()
         
-        # self.update_frame_threading = QThread()
-        # self.frame_processed.connect(self.update_frame)
-        # self.update_frame_threading.start()
-        
-        self.video_thread = VideoThread()
-        self.video_thread.change_pixmap_signal.connect(self.update_frame)
-        self.video_thread.start()
-
         # methods
         # self.getImages() #get all images and supply to self.known_images
         self.getFaceEncodings() # encode all known images
@@ -69,7 +68,11 @@ class Main(QMainWindow, Tabs, FaceRecognizer ):
         # databases
         self.db_json  = "./data/database/db.json"
         self.recent_json = "./data/database/recent.json"
-            
+
+        
+    def updateFaceDetectionIcon(self,icon_path):
+        pass
+    
     def submitRegistration(self):
         if self.register_name is None and self.register_image is None:
             return
@@ -86,6 +89,11 @@ class Main(QMainWindow, Tabs, FaceRecognizer ):
     def clearRegisterNameInput(self):
         pass
     
+    # def closeEvent(self):
+    #     if cv2.waitKey(1) == ord('q'):
+    #         self.cap.release()
+            
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

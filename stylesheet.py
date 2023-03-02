@@ -135,7 +135,31 @@ QLabel {
         font-size: 16px;
         }
 """
+
+# FACE DETECTION ICONS
+
+detection_widget_wrapper = """
+ .detection-widget-wrapper {
+    border: 2px solid #D4CECE;
+                         border-radius: 10px;
+    }
+ .detection-text-label {
+     color: white;
+     font-weight: 500;
+     margin: 0px auto;
+     }
+ .icons-label-detection-layout {
+     display: flex;
+     justify-content: center;
+     }
+ .icon-label {
+     margin: 0px auto;
+     }
+ 
+"""
+
 __all__ = ['main_window',
+           'detection_widget_wrapper',
            'video_capture_label', 
            'image_label',
            'name_label',

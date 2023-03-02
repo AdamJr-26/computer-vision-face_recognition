@@ -13,7 +13,7 @@ from PyQt5.uic import loadUi
 import numpy as np
 import face_recognition
 import threading
-
+import time
 class ProcessFrame(QThread):
     changed_frame = pyqtSignal(np.ndarray)
     
@@ -27,6 +27,7 @@ class ProcessFrame(QThread):
             ret, frame = cap.read()
             if ret:
                 self.changed_frame.emit(frame)
+            time.sleep(2)
                 
     def stop(self):
         self.terminate()
