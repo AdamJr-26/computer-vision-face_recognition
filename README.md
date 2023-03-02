@@ -7,7 +7,7 @@ A brief description of the project and what it does.
 
 Before you begin, ensure you have met the following requirements:
 
-* You have installed the latest version of `<insert software>`
+* You have installed the latest version of `<Python>`
 * You have a `<Windows/Linux/Mac>` machine.
 
 
