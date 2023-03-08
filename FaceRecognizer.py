@@ -17,7 +17,7 @@ from datetime import datetime
 from PIL import Image
 import random
 import string
-from datetime import datetime
+
 from tts.TextToSpeech import TextToSpeech
 
 class FaceRecognizer:

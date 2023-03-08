@@ -28,6 +28,7 @@ class Main(QMainWindow, Tabs, FaceRecognizer ):
 
         self.cap = cv2.VideoCapture(0) 
         
+        
         self.list_detected_images = [] # max len is 20
         self.known_images = []
         self.known_face_names = []
