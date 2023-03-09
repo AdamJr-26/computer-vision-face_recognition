@@ -1,6 +1,6 @@
 # Project Name
 
-A brief description of the project and what it does.
+A simple implementation of computer vision in real world with face detection, face recognition.
 
 
 ## Prerequisites
